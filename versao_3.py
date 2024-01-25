@@ -35,10 +35,6 @@ class Conta:
 
     @classmethod
     def cria_conta(cls, titular, numero):
-        # usuario = verifica_usuario(titular.cpf)
-        # if not usuario:
-        #     print('Usuário não encontrado, fluxo de criação de conta encerrado!')
-        #     return
         return cls(titular, numero)
     
     @property
@@ -78,8 +74,11 @@ class Conta:
         return True
     
     def __str__(self):
-        return f"{self.__class__.__name__}:
-                {', '.join([f'{chave}={valor}' for chave, valor in self.__dict__.items()])}"
+        return f'''
+        Agência:\t\t{self.agencia}
+        Conta:\t\t{self.numero}
+        Titular:\t\t{self.titular}
+        '''
 
 class ContaCorrente(Conta):
     def __init__(self, titular, numero, limite=500, limite_saques=3):
@@ -101,7 +100,56 @@ class ContaCorrente(Conta):
         
         return super().sacar(valor)
 
+class Historico:
+    def __init__(self):
+        self._transacoes = []
 
+    @property
+    def transacoes(self):
+        return self._transacoes
+    
+    def add_transacao(self, transacao):
+        self.transacoes.append({
+            'Tipo': transacao.__class__.__name__,
+            'valor': transacao.valor,
+            'data': datetime.now()
+            })
+        
+class Transacao(ABC):
+    @property
+    @abstractproperty
+    def valor(self):
+        pass
+
+    @abstractclassmethod
+    def registrar(self, conta):
+        pass
+
+class Saque(Transacao):
+    def __init__(self, valor):
+        self._valor = valor
+
+    @property
+    def valor(self):
+        return self._valor
+    
+    def registar(self, conta):
+        sucesso = conta.sacar(self.valor)
+        if sucesso:
+            conta.historico.add_transacao(self)
+
+class Deposito(Transacao):
+    def __init__(self, valor):
+        self._valor = valor
+
+    @property
+    def valor(self):
+        return self._valor
+    
+    def registrar(self, conta):
+        sucesso = conta.depositar(self.valor)
+        if sucesso:
+            conta.historico.add_transacao(self)
 
 def valor_valido(valor):
     if not (isinstance(valor, float) or 
@@ -109,13 +157,4 @@ def valor_valido(valor):
         print('valor inválido!')
         return False
     
-def verifica_usuario(cpf):
-    usuario_filtrado = [usuario for usuario in usuarios if usuario['cpf'] == cpf]
-    return usuario_filtrado[0] if usuario_filtrado else None
 
-usuario = {'nome': 'nivaldo',
-           'cpf': 12345}
-usuarios.append(usuario)
-numero += 1
-cc = Conta.cria_conta(12345, numero)
-print(cc)
