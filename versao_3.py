@@ -64,6 +64,7 @@ class Conta:
         self.saldo += valor
         print("--------> Operação realizada com sucesso --------")
         print(f'Depósito: R${valor:.2f}, saldo atual R$ {self.saldo:.2f}')
+        return True
 
     def sacar(self, valor):
         if valor > self.saldo:
@@ -113,9 +114,8 @@ class Historico:
         self.transacoes.append({
             'Tipo': transacao.__class__.__name__,
             'Valor': transacao.valor,
-            'Data': datetime.now()
+            'Data': datetime.now().strftime("%d-%b-%y / %H:%M:%S")
             })
-        
 class Transacao(ABC):
     @property
     @abstractproperty
@@ -172,8 +172,6 @@ def cria_usuario():
 
 def cria_conta():
     global numero
-    numero += 1
-    print(numero)
     cpf = input("Informe o CPF do usuário: ")
     usuario = verifica_usuario(cpf)
     if not usuario:
@@ -184,6 +182,7 @@ def cria_conta():
     contas.append(conta)
     print('--------> Conta criada com Sucesso! ---------')
     print(conta)
+    numero += 1
     return
     
 def verifica_usuario(cpf):
@@ -196,7 +195,6 @@ def verifica_conta(numero_conta):
                         conta.numero == numero_conta]
     return conta_filtrada[0] if conta_filtrada else None
     
-
 def verifica_credenciais(usuario, conta):
     if not usuario.cpf == conta.titular.cpf:
         return False
@@ -246,7 +244,25 @@ def sacar():
     saque.registrar(conta)
 
 def mostra_extrato():
-    pass
+    cpf = input("informe o cpf do usuario: ")
+    titular = verifica_usuario(cpf)
+    if not titular:
+        print('usuario não cadastrado')
+        return
+    
+    num = input("indique o numero da conta: ")
+    conta = verifica_conta(num)
+    if not conta:
+        print('conta não encontrada')
+        return
+    if not verifica_credenciais(titular, conta):
+        print('conta não pertence ao titular')
+        return
+    for transacao in conta.historico.transacoes:
+        print('-'*100)
+        print('\t|\t'.join([f"{chave}: {valor}" 
+                        for chave, valor in transacao.items()
+                        ]))
 
 def lista_contas():
     pass
@@ -261,7 +277,7 @@ def menu():
     [lc] Listar Contas
     [nu] Novo Usuário
     [q]\tSair
-    =>""")
+    \n=>  """)
     return opcao
 
 while True:
