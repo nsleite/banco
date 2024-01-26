@@ -42,6 +42,10 @@ class Conta:
     def saldo(self):
         return self._saldo
     
+    @saldo.setter
+    def saldo(self, valor):
+        self._saldo = valor
+    
     @property
     def numero(self):
         return self._numero
@@ -132,7 +136,7 @@ class Saque(Transacao):
     def valor(self):
         return self._valor
     
-    def registar(self, conta):
+    def registrar(self, conta):
         sucesso = conta.sacar(self.valor)
         if sucesso:
             conta.historico.add_transacao(self)
@@ -151,10 +155,7 @@ class Deposito(Transacao):
             conta.historico.add_transacao(self)
 
 def valor_valido(valor):
-    try:
-        val = float(valor)
-    except: return False
-    if  val < 0:
+    if  valor < 0 or isinstance(valor, str):
         print('valor inválido!')
         return False
     return True
@@ -205,12 +206,13 @@ def verifica_credenciais(usuario, conta):
 
 def depositar():
     cpf = input("informe o cpf do usuario: ")
-    num = input("indique o numero da conta: ")
     titular = verifica_usuario(cpf)
-    conta = verifica_conta(num)
     if not titular:
         print('usuario não cadastrado')
         return
+    
+    num = input("indique o numero da conta: ")
+    conta = verifica_conta(num)
     if not conta:
         print('conta não encontrada')
         return
