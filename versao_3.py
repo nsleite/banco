@@ -4,8 +4,6 @@ from datetime import datetime
 numero = 1
 usuarios = []
 contas = []
-
-
 class Cliente:
 
     def __init__(self, endereco):
@@ -68,10 +66,10 @@ class Conta:
         print(f'Depósito: R${valor:.2f}, saldo atual R$ {self.saldo:.2f}')
 
     def sacar(self, valor):
-        if valor > self._saque:
+        if valor > self.saldo:
             print("saque excede o saldo em conta")
             return False
-        self._saldo -= valor
+        self.saldo -= valor
         print("--------> Operação realizada com sucesso --------")
         print(f'Saque: R${valor:.2f}, saldo atual: R${self.saldo:.2f}')
         return True
@@ -92,7 +90,7 @@ class ContaCorrente(Conta):
     def sacar(self, valor):
         numero_saques = len(
             [transacao for transacao in self.historico.transacoes
-             if transacao['tipo'] == Saque.__name__])
+             if transacao['Tipo'] == Saque.__name__])
         
         if numero_saques >= self.limite_saques:
             print("limite de saques 3 diários excedido")
@@ -114,8 +112,8 @@ class Historico:
     def add_transacao(self, transacao):
         self.transacoes.append({
             'Tipo': transacao.__class__.__name__,
-            'valor': transacao.valor,
-            'data': datetime.now()
+            'Valor': transacao.valor,
+            'Data': datetime.now()
             })
         
 class Transacao(ABC):
@@ -155,7 +153,7 @@ class Deposito(Transacao):
             conta.historico.add_transacao(self)
 
 def valor_valido(valor):
-    if  valor < 0 or isinstance(valor, str):
+    if  not valor.replace('.', '', 1).isdigit():
         print('valor inválido!')
         return False
     return True
@@ -227,7 +225,25 @@ def depositar():
     deposito.registrar(conta)
 
 def sacar():
-    pass
+    cpf = input("informe o cpf do usuario: ")
+    titular = verifica_usuario(cpf)
+    if not titular:
+        print('usuario não cadastrado')
+        return
+    num = input("indique o numero da conta: ")
+    conta = verifica_conta(num)
+    if not conta:
+        print('conta não encontrada')
+        return
+    if not verifica_credenciais(titular, conta):
+        print('conta não pertence ao titular')
+        return
+    valor = input('insira o valor desejado: ')
+    if not valor_valido(valor):
+        return
+    valor = float(valor)
+    saque = Saque(valor)
+    saque.registrar(conta)
 
 def mostra_extrato():
     pass
@@ -253,7 +269,7 @@ while True:
     if opcao == "d":
         depositar()
     elif opcao == "s":
-        saldo = sacar()
+        sacar()
     elif opcao == "e":
         mostra_extrato()
     elif opcao =='nu':
